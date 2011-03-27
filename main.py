@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 import gobject
@@ -12,6 +13,8 @@ from browser import Browser
 from tablabel import TabLabel
 
 class SessionTab(gobject.GObject):
+    PROCNAME = "browser.py"
+
     __gsignals__ = {
         "close": (gobject.SIGNAL_RUN_FIRST,
                   gobject.TYPE_NONE,
@@ -41,7 +44,9 @@ class SessionTab(gobject.GObject):
         notebook.append_page(self.socket, self.label)
 
     def start(self, url, title):
-        cmd = ["/usr/bin/python", "/home/ivo/m3r/projects/SilverLining/browser.py", str(self.wid), url, title]
+        basedir = os.path.dirname(__file__)
+        sessionproc = os.path.join(basedir, self.PROCNAME)
+        cmd = [sys.executable, sessionproc,  str(self.wid), url, title]
         proc = subprocess.Popen(cmd,
                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
