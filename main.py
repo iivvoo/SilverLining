@@ -72,7 +72,6 @@ class SilverLining(object):
 
         self.window.connect("destroy", gtk.main_quit)
 
-        self.browsers = []
         self.window.show_all()
 
     def add_tab(self, app):
@@ -83,7 +82,6 @@ class SilverLining(object):
         tab.start(app[1], app[0])
 
     def app_selected(self, widget, app):
-        print "SELECT", app
         self.add_tab(app)
     
     def close(self, tab):
