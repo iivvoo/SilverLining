@@ -10,11 +10,8 @@ Optional features:
 
 - select application type from template, enter username/password,
   auto-login ("keychain")
-- open new urls in "normal" browser
-
 
 TODO:
-- open links in default browser
 - app title from active tab
  (requires communication between parent/child)
 - definition of session profiles (?) / apps?
