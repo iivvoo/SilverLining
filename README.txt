@@ -11,3 +11,11 @@ Optional features:
 - select application type from template, enter username/password,
   auto-login ("keychain")
 - open new urls in "normal" browser
+
+
+TODO:
+- tab close button
+- scrolled window
+- title in (sub) tab
+- definition of session profiles (?) / apps?
+
