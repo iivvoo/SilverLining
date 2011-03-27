@@ -41,9 +41,9 @@ class SessionTab(gobject.GObject):
         notebook.append_page(self.socket, self.label)
 
     def start(self, url, title):
-        cmd = ["/usr/bin/python", "/home/ivo/m3r/projects/Visel/browser.py", str(self.wid), url, title]
+        cmd = ["/usr/bin/python", "/home/ivo/m3r/projects/SilverLining/browser.py", str(self.wid), url, title]
         proc = subprocess.Popen(cmd,
-               stdin=subprocess.PIPE, stdout=subprocess.PIPE)# , cwd="/home/ivo/m3r/projects/Visel")
+               stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     def close(self, label):
         self.emit("close")
@@ -56,7 +56,7 @@ class SilverLining(object):
     
     def __init__(self):
         self.tree = gtk.Builder()
-        self.tree.add_from_file("visel.glade")
+        self.tree.add_from_file("silverlining.glade")
         self.window = self.tree.get_object("window1")
         self.notebook = self.tree.get_object("notebook1")
         self.menu = self.tree.get_object("appmenu")
