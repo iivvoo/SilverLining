@@ -23,15 +23,22 @@ class NotebookPage(gobject.GObject):
 
     def __init__(self, url, title="new"):
         super(NotebookPage, self).__init__()
+
         self.browser = Browser()
         self.browser.open(url)
         self.browser.connect("load-finished", self.load_finished)
+
+        self.win = gtk.ScrolledWindow()
+        self.win.props.hscrollbar_policy = gtk.POLICY_AUTOMATIC
+        self.win.props.vscrollbar_policy = gtk.POLICY_AUTOMATIC
+        self.win.add(self.browser)
+        self.win.show_all()
 
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
 
     def add_to_notebook(self, notebook):
-        notebook.append_page(self.browser, self.label)
+        notebook.append_page(self.win, self.label)
 
     def close(self, widget):
         self.emit("close")
@@ -41,11 +48,11 @@ class NotebookPage(gobject.GObject):
         self.label.text = title 
 
     def show(self):
-        self.browser.show_all()
+        self.win.show_all()
         self.label.show_all()
 
     def destroy(self):
-        self.browser.destroy()
+        self.win.destroy()
         self.label.destroy()
 
     show_all = show
@@ -72,7 +79,7 @@ class Session(gtk.Notebook):
         return self.add_tab("", "new")
 
     def close_tab(self, tab):
-        num = self.page_num(tab.browser)
+        num = self.page_num(tab.win)
         self.remove_page(num)
         tab.destroy()
 

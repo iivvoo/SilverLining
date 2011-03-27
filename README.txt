@@ -15,6 +15,9 @@ Optional features:
 
 TODO:
 - scrolled window
-- app title op aktieve tab
+- open links in default browser
+- app title from active tab
+ (requires communication between parent/child)
 - definition of session profiles (?) / apps?
+- 
 
