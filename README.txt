@@ -11,6 +11,16 @@ Optional features:
 - select application type from template, enter username/password,
   auto-login ("keychain")
 
+Why not ...
+
+- Ingocnito/private browsing? All incognito/private tabs/windows run
+  in the same session, so essentially you'll get two sessions max.
+- Google authentication switching? It doesn't work. at all. 
+- Firefox profiles. Gives you lots of windows, and if your default session
+  crashes the next profile becomes the default target for new links. 
+  You'll have to terminate all profiles so your default session can be
+  the first again.
+
 TODO:
 - app title from active tab
  (requires communication between parent/child)
