@@ -37,8 +37,8 @@ class NotebookPage(gobject.GObject):
         self.emit("close")
 
     def load_finished(self, widget, frame, *a, **b):
-        title = frame.get_title()
-        self.label.text = title
+        title = frame.get_title() or frame.get_uri() or ""
+        self.label.text = title 
 
     def show(self):
         self.browser.show_all()
@@ -47,6 +47,7 @@ class NotebookPage(gobject.GObject):
     def destroy(self):
         self.browser.destroy()
         self.label.destroy()
+
     show_all = show
 
     def grab_focus(self):
@@ -72,10 +73,9 @@ class Session(gtk.Notebook):
 
     def close_tab(self, tab):
         num = self.page_num(tab.browser)
-        tab.destroy()
         self.remove_page(num)
+        tab.destroy()
 
-        print "Session CLOSE", tab
         ## if all tabs are closed, report cleanup to parent process
 
 if __name__ == '__main__':

@@ -1,13 +1,54 @@
 import os
 import time
 
+import gobject
 import pygtk  
 import gtk  
 import gtk.glade  
 
-from browser import Browser
+import subprocess
 
-class Visel(object):
+from browser import Browser
+from tablabel import TabLabel
+
+class SessionTab(gobject.GObject):
+    __gsignals__ = {
+        "close": (gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
+                  ())
+        }
+
+    def __init__(self, url, title="new"):
+        super(SessionTab, self).__init__()
+        self.socket = gtk.Socket()
+        self.label = TabLabel(title)
+        self.label.connect("close", self.close)
+
+        self.wid = -1
+
+    def show(self):
+        self.socket.show()
+        self.label.show_all()
+        self.wid = self.socket.get_id()
+
+    show_all = show
+
+    def destroy(self):
+        self.socket.destroy()
+        self.label.destroy()
+
+    def add_to_notebook(self, notebook):
+        notebook.append_page(self.socket, self.label)
+
+    def start(self, url, title):
+        cmd = ["/usr/bin/python", "/home/ivo/m3r/projects/Visel/browser.py", str(self.wid), url, title]
+        proc = subprocess.Popen(cmd,
+               stdin=subprocess.PIPE, stdout=subprocess.PIPE)# , cwd="/home/ivo/m3r/projects/Visel")
+
+    def close(self, label):
+        self.emit("close")
+
+class SilverLining(object):
     apps = (("gmail", "http://mail.google.com"),
             ("google docs", "http://docs.google.com"),
             ("twitter", "http://www.twitter.com"),
@@ -30,27 +71,24 @@ class Visel(object):
         self.window.show_all()
 
     def add_tab(self, app):
-        socket = gtk.Socket()
-        self.notebook.append_page(socket, gtk.Label(app[0]))
-        socket.show()
-        Wid = socket.get_id()
-        print "WID", Wid
-
-
-        # self.browsers.append(b)
-        # b.widget.show()
-
-        cmd = ["/usr/bin/python", "/home/ivo/m3r/projects/Visel/browser.py", str(Wid), app[1], app[0]]
-        import subprocess
-        proc = subprocess.Popen(cmd,
-               stdin=subprocess.PIPE, stdout=subprocess.PIPE)# , cwd="/home/ivo/m3r/projects/Visel")
+        tab = SessionTab(app[1], app[0])
+        tab.add_to_notebook(self.notebook)
+        tab.connect("close", self.close)
+        tab.show_all()
+        tab.start(app[1], app[0])
 
     def app_selected(self, widget, app):
         print "SELECT", app
         self.add_tab(app)
     
-v = Visel()
-#v.add_tab(v.apps[0])
-#v.add_tab(v.apps[0])
-gtk.main()
+    def close(self, tab):
+        num = self.notebook.page_num(tab.socket)
+        self.notebook.remove_page(num)
+        tab.destroy()
 
+if __name__ == '__main__':
+    sl = SilverLining()
+    sl.add_tab(sl.apps[0])
+    sl.add_tab(sl.apps[0])
+    gtk.main()
+    

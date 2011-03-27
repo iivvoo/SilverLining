@@ -14,8 +14,7 @@ Optional features:
 
 
 TODO:
-- tab close button
 - scrolled window
-- title in (sub) tab
+- app title op aktieve tab
 - definition of session profiles (?) / apps?
 
