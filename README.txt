@@ -14,7 +14,6 @@ Optional features:
 
 
 TODO:
-- scrolled window
 - open links in default browser
 - app title from active tab
  (requires communication between parent/child)

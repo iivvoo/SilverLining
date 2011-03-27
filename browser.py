@@ -7,6 +7,8 @@ import gtk
 import gobject
 import webkit
 
+import webbrowser
+
 from tablabel import TabLabel
 
 class Browser(webkit.WebView):
@@ -24,9 +26,13 @@ class NotebookPage(gobject.GObject):
     def __init__(self, url, title="new"):
         super(NotebookPage, self).__init__()
 
+        self.hover = None
+
         self.browser = Browser()
         self.browser.open(url)
         self.browser.connect("load-finished", self.load_finished)
+        self.browser.connect("hovering-over-link", self.hovering_over_link)
+        self.browser.connect_after("populate-popup", self.populate_popup)
 
         self.win = gtk.ScrolledWindow()
         self.win.props.hscrollbar_policy = gtk.POLICY_AUTOMATIC
@@ -43,10 +49,6 @@ class NotebookPage(gobject.GObject):
     def close(self, widget):
         self.emit("close")
 
-    def load_finished(self, widget, frame, *a, **b):
-        title = frame.get_title() or frame.get_uri() or ""
-        self.label.text = title 
-
     def show(self):
         self.win.show_all()
         self.label.show_all()
@@ -59,6 +61,28 @@ class NotebookPage(gobject.GObject):
 
     def grab_focus(self):
         self.browser.grab_focus()
+
+    ## handlers
+
+    def load_finished(self, widget, frame, *a, **b):
+        title = frame.get_title() or frame.get_uri() or ""
+        self.label.text = title 
+
+    def hovering_over_link(self, view, title, uri):
+        print "Hovering", uri
+        self.hover = uri
+
+    def populate_popup(self, view, menu):
+        open_in_browser = gtk.MenuItem("Open in default browser")
+        open_in_browser.connect('activate', self.open_in_browser)
+        menu.append(open_in_browser)
+        menu.show_all()
+        return False
+
+    def open_in_browser(self, menu_item):
+        print "OIB", self.hover
+        if self.hover:
+            webbrowser.open(self.hover)
 
 class Session(gtk.Notebook):
     def __init__(self):
