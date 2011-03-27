@@ -4,7 +4,13 @@ import os
 import sys
 import time
 import gtk
-import gtkmozembed
+import gobject
+import webkit
+
+class Browser(webkit.WebView):
+    def __init__(self):
+        super(Browser, self).__init__()
+
 
 class Session(gtk.Notebook):
     def __init__(self):
@@ -13,16 +19,23 @@ class Session(gtk.Notebook):
         self.show()
 
     def add_tab(self, url, label):
-        moz = gtkmozembed.MozEmbed()
-        moz.connect("new-window", self.new_window)
-        moz.load_url(url)
-        self.append_page(moz, gtk.Label(label))
-        moz.show()
-        moz.grab_focus()
-        return moz
+        #moz = gtkmozembed.MozEmbed()
+        #moz.connect("new-window", self.new_window)
+        #moz.load_url(url)
+        #self.append_page(moz, gtk.Label(label))
+        #moz.show()
+        #moz.grab_focus()
+        #return moz
+        b = Browser()
+        b.open(url)
+        self.append_page(b, gtk.Label(label))
+        b.show()
+        b.grab_focus()
+        b.connect("create-web-view", self.new_window)
+        return b
 
-    def new_window(self, *a, **b):
-        print "new_window", a, b
+    def new_window(self, webview, webframe):
+        print "new_window", webview, webframe
         return self.add_tab("", "new")
 
 
@@ -34,7 +47,8 @@ def mkprofile():
     return path
 
 if __name__ == '__main__':
-    gtkmozembed.set_profile_path(mkprofile(), "browser")
+    # gtkmozembed.set_profile_path(mkprofile(), "browser")
+    gobject.threads_init()
     Wid = int(sys.argv[1])
     url = sys.argv[2]
     label = sys.argv[2]
