@@ -22,6 +22,13 @@ Why not ...
   the first again.
 
 TODO:
+- twitter view is too big -> too slow. Scroll window is max size!
+- throbber
+- title update(s) (javascript)
+- better session definition, more sensible title in top-row tabs
+- reorder tab-order
+- add session/browser tabs, enter location
+- handle window close request (eg. popin gtalk chat)
 - app title from active tab
  (requires communication between parent/child)
 - definition of session profiles (?) / apps?

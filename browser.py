@@ -44,7 +44,7 @@ class NotebookPage(gobject.GObject):
         self.label.connect("close", self.close)
 
     def add_to_notebook(self, notebook):
-        notebook.append_page(self.win, self.label)
+        return notebook.append_page(self.win, self.label)
 
     def close(self, widget):
         self.emit("close")
@@ -62,6 +62,17 @@ class NotebookPage(gobject.GObject):
     def grab_focus(self):
         self.browser.grab_focus()
 
+    def open(self, url):
+        self.browser.open(url)
+
+    def back(self):
+        self.browser.go_back()
+
+    def forward(self):
+        self.browser.go_forward()
+
+    def reload(self):
+        self.browser.reload()
     ## handlers
 
     def load_finished(self, widget, frame, *a, **b):
@@ -80,7 +91,6 @@ class NotebookPage(gobject.GObject):
         return False
 
     def open_in_browser(self, menu_item):
-        print "OIB", self.hover
         if self.hover:
             webbrowser.open(self.hover)
 
@@ -89,15 +99,22 @@ class Session(gtk.Notebook):
         super(Session, self).__init__()
         self.set_tab_pos(gtk.POS_TOP)
         self.show()
+        self.tabs = {}
+        gobject.io_add_watch(sys.stdin, gobject.IO_IN, self.handle_stdin)
 
     def add_tab(self, url, title):
         p = NotebookPage(url, title)
-        p.add_to_notebook(self)
+        index = p.add_to_notebook(self)
+        self.tabs[index] = p
+
         p.show()
         p.connect("close", self.close_tab)
         p.grab_focus()
         p.browser.connect("create-web-view", self.new_window)
         return p.browser
+
+    def current(self):
+        return self.tabs[self.get_current_page()]
 
     def new_window(self, webview, webframe):
         return self.add_tab("", "new")
@@ -109,6 +126,28 @@ class Session(gtk.Notebook):
 
         ## if all tabs are closed, report cleanup to parent process
 
+    def handle_stdin(self, source, condition):
+        data = source.readline()
+        if ' ' in data:
+            cmd, rest = data.split(" ", 1)
+        else:
+            cmd, rest = data.strip(), ''
+        if cmd == "new":
+            self.add_tab(rest.strip(), rest.strip())
+        elif cmd == "open":
+            self.current().open(rest.strip())
+        elif cmd == "back":
+            self.current().back()
+        elif cmd == "forward":
+            self.current().forward()
+        elif cmd == "reload":
+            self.current().reload()
+        elif cmd == "debug":
+            import pdb
+            pdb.Pdb(stdin=getattr(sys,'__stdin__'),stdout=getattr(sys,'__stderr__')).set_trace(sys._getframe().f_back)
+
+
+        return True
 if __name__ == '__main__':
     gobject.threads_init()
     Wid = int(sys.argv[1])
