@@ -62,6 +62,11 @@ class SessionTab(gobject.GObject):
     def handle_child(self, source, condition):
         """ the child wrote something to stdout """
         data = source.readline()
+        ##
+        ## Types of commands:
+        ## CURRENT <url> - url for currently selected tab (to show in location)
+        ## HOVER <url> - url for currently selected item
+        ## TITLE <title> - title update for current tab
         print "CHILD wrote", data
         return True
 
