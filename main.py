@@ -61,13 +61,19 @@ class SessionTab(gobject.GObject):
         self.emit("close")
 
     def send(self, cmd):
-        self.proc.stdin.write(cmd + "\n")
+        self.proc.stdin.write("%s\n%s" % (len(cmd), cmd))
         self.proc.stdin.flush()
 
     def handle_child(self, source, condition):
         """ the child wrote something to stdout """
         print "handle_child", source, condition
-        data = source.readline()
+        try:
+            s = int(source.readline())
+        except ValueError, e:
+            print "Noise"
+            return
+
+        data = source.read(s)
         ##
         ## Types of commands:
         ## CURRENT <url> - url for currently selected tab (to show in location)

@@ -80,7 +80,6 @@ class NotebookPage(gobject.GObject):
         self.label.text = title 
 
     def hovering_over_link(self, view, title, uri):
-        print "Hovering", uri
         self.hover = uri
 
     def populate_popup(self, view, menu):
@@ -127,7 +126,9 @@ class Session(gtk.Notebook):
         ## if all tabs are closed, report cleanup to parent process
 
     def handle_stdin(self, source, condition):
-        data = source.readline()
+        size = int(source.readline())
+        data = source.read(size)
+
         if ' ' in data:
             cmd, rest = data.split(" ", 1)
         else:
@@ -146,8 +147,12 @@ class Session(gtk.Notebook):
             import pdb
             pdb.Pdb(stdin=getattr(sys,'__stdin__'),stdout=getattr(sys,'__stderr__')).set_trace(sys._getframe().f_back)
 
-
         return True
+
+    def send(self, msg):
+        sys.stdout.write("%s\n%s" % (len(msg), msg))
+        sys.stdout.flush()
+
 if __name__ == '__main__':
     gobject.threads_init()
     Wid = int(sys.argv[1])
