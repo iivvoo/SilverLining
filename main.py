@@ -26,6 +26,8 @@ class SessionTab(gobject.GObject):
         self.socket = gtk.Socket()
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
+        self.proc = None
+        self.source_id = None
 
         self.wid = -1
 
@@ -37,6 +39,9 @@ class SessionTab(gobject.GObject):
     show_all = show
 
     def destroy(self):
+        if self.source_id is not None:
+            gobject.source_remove(self.source_id)
+        self.proc.kill()
         self.socket.destroy()
         self.label.destroy()
 
@@ -50,7 +55,7 @@ class SessionTab(gobject.GObject):
         self.proc = subprocess.Popen(cmd,
                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-        gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.handle_child)
+        self.source_id = gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.handle_child)
 
     def close(self, label):
         self.emit("close")
