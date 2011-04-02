@@ -18,6 +18,12 @@ class SessionTab(gobject.GObject):
     __gsignals__ = {
         "close": (gobject.SIGNAL_RUN_FIRST,
                   gobject.TYPE_NONE,
+                  ()),
+        "status":(gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
+                  ()),
+        "title":(gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
                   ())
         }
 
@@ -28,6 +34,7 @@ class SessionTab(gobject.GObject):
         self.label.connect("close", self.close)
         self.proc = None
         self.source_id = None
+        self.status = ""
 
         self.wid = -1
 
@@ -55,6 +62,10 @@ class SessionTab(gobject.GObject):
         self.proc = subprocess.Popen(cmd,
                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
+        ## force non-blocking
+        ## import fcntl
+        ## fl = fcntl.fcntl(self.proc.stdout, fcntl.F_GETFL)
+        ## fcntl.fcntl(self.proc.stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
         self.source_id = gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.handle_child)
 
     def close(self, label):
@@ -66,18 +77,29 @@ class SessionTab(gobject.GObject):
 
     def handle_child(self, source, condition):
         """ the child wrote something to stdout """
-        print "handle_child", source, condition
+        #print "handle_child", source, condition
         try:
             s = int(source.readline())
         except ValueError, e:
-            print "Noise"
-            return
+            #print "Noise"
+            return True
 
         data = source.read(s)
+        if " " in data:
+            cmd, rest = data.split(" ", 1)
+        else:
+            cmd, rest = data, ""
+        if cmd == "status":
+            self.status = rest
+            self.emit("status")
+        elif cmd == "title":
+            self.title = rest
+            self.emit("title")
+
         ##
         ## Types of commands:
         ## CURRENT <url> - url for currently selected tab (to show in location)
-        ## HOVER <url> - url for currently selected item
+        ## STATUS <url> - url for currently selected item
         ## TITLE <title> - title update for current tab
         print "CHILD wrote", data
         return True
@@ -91,7 +113,7 @@ class SilverLining(object):
     def __init__(self):
         self.tree = gtk.Builder()
         self.tree.add_from_file("silverlining.glade")
-        self.window = self.tree.get_object("window1")
+        self.window = self.tree.get_object("window")
         self.notebook = self.tree.get_object("notebook1")
         self.menu = self.tree.get_object("appmenu")
         for a in self.apps:
@@ -103,11 +125,13 @@ class SilverLining(object):
         self.forward = self.tree.get_object("forward")
         self.reload = self.tree.get_object("reload")
         self.location = self.tree.get_object("location")
+        self.status = self.tree.get_object("status")
 
         self.back.connect("clicked", self.handle_back)
         self.forward.connect("clicked", self.handle_forward)
         self.reload.connect("clicked", self.handle_reload)
         self.location.connect("activate", self.handle_location)
+        self.notebook.connect("switch-page", self.handle_switch_page)
 
         self.window.connect("destroy", gtk.main_quit)
 
@@ -120,13 +144,22 @@ class SilverLining(object):
         self.tabs[index] = tab
 
         tab.connect("close", self.close)
+        tab.connect("status", self.handle_session_status)
+        tab.connect("title", self.handle_session_title)
+
         tab.show_all()
         tab.start(app[1], app[0])
 
     def current(self):
         return self.tabs[self.notebook.get_current_page()]
 
-    ## handlers
+    ## local handlers
+    def handle_switch_page(self, widget, page, num):
+        if num in self.tabs:
+            current = self.tabs[num]
+            self.status.set_text(current.status)
+            self.window.set_title("SilverLining: " + current.title)
+
     def handle_back(self, widget):
         self.current().send("back")
 
@@ -147,9 +180,19 @@ class SilverLining(object):
         self.notebook.remove_page(num)
         tab.destroy()
 
+    ## session handlers
+    def handle_session_status(self, tab):
+        if tab == self.current():
+            self.status.set_text(tab.status)
+
+    def handle_session_title(self, tab):
+        if tab == self.current():
+            self.window.set_title("SilverLining: " + tab.title)
+
 if __name__ == '__main__':
     sl = SilverLining()
     sl.add_tab(sl.apps[0])
-    sl.add_tab(sl.apps[0])
+    sl.add_tab(sl.apps[2])
+    sl.add_tab(sl.apps[3])
     gtk.main()
     

@@ -11,6 +11,7 @@ import webbrowser
 
 from tablabel import TabLabel
 
+# http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
 class Browser(webkit.WebView):
 
     def __init__(self):
@@ -19,6 +20,12 @@ class Browser(webkit.WebView):
 class NotebookPage(gobject.GObject):
     __gsignals__ = {
         "close": (gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
+                  ()),
+        "status": (gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
+                  ()),
+        "title": (gobject.SIGNAL_RUN_FIRST,
                   gobject.TYPE_NONE,
                   ())
         }
@@ -32,6 +39,7 @@ class NotebookPage(gobject.GObject):
         self.browser.open(url)
         self.browser.connect("load-finished", self.load_finished)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
+        self.browser.connect("title-changed", self.handle_title_changed)
         self.browser.connect_after("populate-popup", self.populate_popup)
 
         self.win = gtk.ScrolledWindow()
@@ -42,6 +50,9 @@ class NotebookPage(gobject.GObject):
 
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
+        self.status = ""
+        self.title = ""
+        self.hover = None
 
     def add_to_notebook(self, notebook):
         return notebook.append_page(self.win, self.label)
@@ -76,11 +87,18 @@ class NotebookPage(gobject.GObject):
     ## handlers
 
     def load_finished(self, widget, frame, *a, **b):
-        title = frame.get_title() or frame.get_uri() or ""
-        self.label.text = title 
+        self.title = frame.get_title() or frame.get_uri() or ""
+        self.label.text = self.title 
+        self.emit("title")
 
     def hovering_over_link(self, view, title, uri):
+        self.status = uri or ""
         self.hover = uri
+        self.emit("status")
+
+    def handle_title_changed(self, view, frame, title):
+        self.title = title
+        self.emit("title")
 
     def populate_popup(self, view, menu):
         open_in_browser = gtk.MenuItem("Open in default browser")
@@ -101,6 +119,8 @@ class Session(gtk.Notebook):
         self.tabs = {}
         gobject.io_add_watch(sys.stdin, gobject.IO_IN, self.handle_stdin)
 
+        self.connect("switch-page", self.handle_switch_page)
+
     def add_tab(self, url, title):
         p = NotebookPage(url, title)
         index = p.add_to_notebook(self)
@@ -108,6 +128,8 @@ class Session(gtk.Notebook):
 
         p.show()
         p.connect("close", self.close_tab)
+        p.connect("status", self.handle_status)
+        p.connect("title", self.handle_title)
         p.grab_focus()
         p.browser.connect("create-web-view", self.new_window)
         return p.browser
@@ -124,6 +146,18 @@ class Session(gtk.Notebook):
         tab.destroy()
 
         ## if all tabs are closed, report cleanup to parent process
+
+    def handle_switch_page(self, widget, page, num):
+        if num in self.tabs:
+            p = self.tabs[num]
+            self.send("title " + p.title)
+
+    def handle_status(self, tab):
+        self.send("status " + tab.status)
+
+    def handle_title(self, tab):
+        if tab == self.current():
+            self.send("title " + tab.title)
 
     def handle_stdin(self, source, condition):
         size = int(source.readline())

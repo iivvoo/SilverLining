@@ -2,7 +2,7 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkWindow" id="window1">
+  <object class="GtkWindow" id="window">
     <property name="width_request">800</property>
     <property name="height_request">600</property>
     <property name="default_width">800</property>
@@ -249,6 +249,18 @@
           </object>
           <packing>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="status">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">label</property>
+            <property name="ellipsize">end</property>
+            <property name="single_line_mode">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
