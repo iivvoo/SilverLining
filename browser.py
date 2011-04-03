@@ -2,7 +2,6 @@
 
 import os
 import sys
-import time
 import gtk
 import gobject
 import webkit
@@ -39,9 +38,8 @@ class FavCache(object):
 
 favcache = FavCache()
 
-# http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
 class Browser(webkit.WebView):
-
+    # http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
     def __init__(self):
         super(Browser, self).__init__()
 
@@ -72,6 +70,7 @@ class NotebookPage(gobject.GObject):
         self.browser.connect("hovering-over-link", self.hovering_over_link)
         self.browser.connect("title-changed", self.handle_title_changed)
         self.browser.connect("icon-loaded", self.handle_icon_loaded)
+        self.browser.connect("download-requested", self.handle_download_requested)
         self.browser.connect_after("populate-popup", self.populate_popup)
         self.open(url)
 
@@ -139,6 +138,7 @@ class NotebookPage(gobject.GObject):
             self.throbbing = False
             self.label.icon.set_from_stock(gtk.STOCK_ORIENTATION_PORTRAIT, gtk.ICON_SIZE_MENU)
             ## handle_icon_loaded may follow, setting the actual favicon
+        ## widget.execute_script("alert('Hello')")
 
     def hovering_over_link(self, view, title, uri):
         self.status = uri or ""
@@ -155,6 +155,12 @@ class NotebookPage(gobject.GObject):
         pixbuf = favcache.get(uri)
         self.label.icon.set_from_pixbuf(pixbuf)
         self.throbbing = False
+
+    def handle_download_requested(self, widget, download, *a, **b):
+        ## popup, etc XXX
+        name = download.get_uri().rsplit('/')[-1]
+        download.set_destination_uri("file:///tmp/" + name )
+        return True
 
     def populate_popup(self, view, menu):
         open_in_browser = gtk.MenuItem("Open in default browser")
