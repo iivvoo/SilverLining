@@ -35,6 +35,7 @@ class SessionTab(gobject.GObject):
         self.proc = None
         self.source_id = None
         self.status = ""
+        self.title = ""
 
         self.wid = -1
 
@@ -124,12 +125,14 @@ class SilverLining(object):
         self.back = self.tree.get_object("back")
         self.forward = self.tree.get_object("forward")
         self.reload = self.tree.get_object("reload")
+        self.new = self.tree.get_object("new")
         self.location = self.tree.get_object("location")
         self.status = self.tree.get_object("status")
 
         self.back.connect("clicked", self.handle_back)
         self.forward.connect("clicked", self.handle_forward)
         self.reload.connect("clicked", self.handle_reload)
+        self.new.connect("clicked", self.handle_new)
         self.location.connect("activate", self.handle_location)
         self.notebook.connect("switch-page", self.handle_switch_page)
 
@@ -170,7 +173,16 @@ class SilverLining(object):
         self.current().send("reload")
 
     def handle_location(self, widget):
-        self.current().send("open " + self.location.get_text())
+        url = self.location.get_text().strip()
+        if not url:
+            return
+        if not url.startswith("http:"):
+            url = "http://" + url
+        self.location.set_text(url)
+        self.current().send("open " + url)
+
+    def handle_new(self, widget):
+        self.current().send("new about:blank")
 
     def app_selected(self, widget, app):
         self.add_tab(app)

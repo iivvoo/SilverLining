@@ -161,66 +161,75 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox1">
+          <object class="GtkToolbar" id="toolbar1">
             <property name="visible">True</property>
+            <property name="icon_size">1</property>
             <child>
-              <object class="GtkButton" id="back">
-                <property name="label">gtk-go-back</property>
+              <object class="GtkToolButton" id="back">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <property name="image_position">top</property>
+                <property name="label" translatable="yes">back</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-go-back</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="reload">
-                <property name="label">gtk-refresh</property>
+              <object class="GtkToolButton" id="reload">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <property name="image_position">top</property>
+                <property name="label" translatable="yes">refresh</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-refresh</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">1</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="forward">
-                <property name="label">gtk-go-forward</property>
+              <object class="GtkToolButton" id="forward">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <property name="image_position">top</property>
+                <property name="label" translatable="yes">forward</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-go-forward</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">2</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="location">
+              <object class="GtkToolButton" id="new">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="invisible_char">&#x2022;</property>
+                <property name="label" translatable="yes">new</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-new</property>
               </object>
               <packing>
-                <property name="position">3</property>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolItem" id="location_button">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkEntry" id="location">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
             <property name="position">1</property>
           </packing>
         </child>
@@ -254,9 +263,12 @@
         <child>
           <object class="GtkLabel" id="status">
             <property name="visible">True</property>
+            <property name="xalign">0</property>
             <property name="label" translatable="yes">label</property>
-            <property name="ellipsize">end</property>
             <property name="single_line_mode">True</property>
+            <attributes>
+              <attribute name="gravity" value="west"/>
+            </attributes>
           </object>
           <packing>
             <property name="expand">False</property>

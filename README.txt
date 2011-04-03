@@ -26,7 +26,6 @@ TODO:
 - throbber
 - better session definition, more sensible title in top-row tabs
 - reorder tab-order
-- add session/browser tabs, enter location
 - handle window close request (eg. popin gtalk chat)
 - definition of session profiles (?) / apps?
 - 

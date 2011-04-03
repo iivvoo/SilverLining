@@ -11,6 +11,17 @@ import webbrowser
 
 from tablabel import TabLabel
 
+VERSION = "0.1"
+
+ABOUT_PAGE="""<html>
+ <head>
+   <title>SilverLining - the cloud browser</title>
+ </head>
+ <body>
+ Welcome to SilverLining version %s
+ </body>
+</html>""" % VERSION
+
 # http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
 class Browser(webkit.WebView):
 
@@ -36,11 +47,11 @@ class NotebookPage(gobject.GObject):
         self.hover = None
 
         self.browser = Browser()
-        self.browser.open(url)
         self.browser.connect("load-finished", self.load_finished)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
         self.browser.connect("title-changed", self.handle_title_changed)
         self.browser.connect_after("populate-popup", self.populate_popup)
+        self.open(url)
 
         self.win = gtk.ScrolledWindow()
         self.win.props.hscrollbar_policy = gtk.POLICY_AUTOMATIC
@@ -74,7 +85,10 @@ class NotebookPage(gobject.GObject):
         self.browser.grab_focus()
 
     def open(self, url):
-        self.browser.open(url)
+        if url == "about:blank":
+            self.browser.load_string(ABOUT_PAGE, "text/html", "utf-8", "about")
+        else:
+            self.browser.open(url)
 
     def back(self):
         self.browser.go_back()
