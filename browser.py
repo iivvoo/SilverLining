@@ -65,8 +65,8 @@ class NotebookPage(gobject.GObject):
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
         self.browser = Browser()
-        self.browser.connect("load-finished", self.load_finished)
         self.browser.connect("load-started", self.load_started)
+        self.browser.connect("load-finished", self.load_finished)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
         self.browser.connect("title-changed", self.handle_title_changed)
         self.browser.connect("icon-loaded", self.handle_icon_loaded)
@@ -104,6 +104,7 @@ class NotebookPage(gobject.GObject):
         self.browser.grab_focus()
 
     def show_throbber(self):
+        self.throbbing = True
         throbber = os.path.join(os.path.dirname(__file__), "throbber.gif")
         self.label.icon.set_from_file(throbber)
 
@@ -111,9 +112,8 @@ class NotebookPage(gobject.GObject):
         if url == "about:blank":
             self.browser.load_string(ABOUT_PAGE, "text/html", "utf-8", "about")
         else:
-            self.throbbing = True
-            self.show_throbber()
             self.browser.open(url)
+        self.show_throbber()
 
     def back(self):
         self.browser.go_back()
@@ -122,7 +122,7 @@ class NotebookPage(gobject.GObject):
         self.browser.go_forward()
 
     def reload(self):
-        self.label.icon.set_from_file("throbber.gif")
+        self.show_throbber()
         self.browser.reload()
 
     ## handlers
