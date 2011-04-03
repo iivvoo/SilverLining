@@ -6,6 +6,7 @@ import time
 import gtk
 import gobject
 import webkit
+import urllib2
 
 import webbrowser
 
@@ -21,6 +22,22 @@ ABOUT_PAGE="""<html>
  Welcome to SilverLining version %s
  </body>
 </html>""" % VERSION
+
+class FavCache(object):
+    def __init__(self):
+        self.cache = {}
+
+    def get(self, uri):
+        if uri not in self.cache:
+            response = urllib2.urlopen(uri)
+            loader = gtk.gdk.PixbufLoader()
+            loader.write(response.read())
+            loader.close()
+            self.cache[uri] = loader.get_pixbuf()
+
+        return self.cache[uri]
+
+favcache = FavCache()
 
 # http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
 class Browser(webkit.WebView):
@@ -45,11 +62,16 @@ class NotebookPage(gobject.GObject):
         super(NotebookPage, self).__init__()
 
         self.hover = None
+        self.throbbing = False
 
+        self.label = TabLabel(title)
+        self.label.connect("close", self.close)
         self.browser = Browser()
         self.browser.connect("load-finished", self.load_finished)
+        self.browser.connect("load-started", self.load_started)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
         self.browser.connect("title-changed", self.handle_title_changed)
+        self.browser.connect("icon-loaded", self.handle_icon_loaded)
         self.browser.connect_after("populate-popup", self.populate_popup)
         self.open(url)
 
@@ -59,8 +81,6 @@ class NotebookPage(gobject.GObject):
         self.win.add(self.browser)
         self.win.show_all()
 
-        self.label = TabLabel(title)
-        self.label.connect("close", self.close)
         self.status = ""
         self.title = ""
         self.hover = None
@@ -84,10 +104,16 @@ class NotebookPage(gobject.GObject):
     def grab_focus(self):
         self.browser.grab_focus()
 
+    def show_throbber(self):
+        throbber = os.path.join(os.path.dirname(__file__), "throbber.gif")
+        self.label.icon.set_from_file(throbber)
+
     def open(self, url):
         if url == "about:blank":
             self.browser.load_string(ABOUT_PAGE, "text/html", "utf-8", "about")
         else:
+            self.throbbing = True
+            self.show_throbber()
             self.browser.open(url)
 
     def back(self):
@@ -97,13 +123,22 @@ class NotebookPage(gobject.GObject):
         self.browser.go_forward()
 
     def reload(self):
+        self.label.icon.set_from_file("throbber.gif")
         self.browser.reload()
+
     ## handlers
+
+    def load_started(self, widget, frame, *a, **b):
+        self.show_throbber()
 
     def load_finished(self, widget, frame, *a, **b):
         self.title = frame.get_title() or frame.get_uri() or ""
         self.label.text = self.title 
         self.emit("title")
+        if self.throbbing:
+            self.throbbing = False
+            self.label.icon.set_from_stock(gtk.STOCK_ORIENTATION_PORTRAIT, gtk.ICON_SIZE_MENU)
+            ## handle_icon_loaded may follow, setting the actual favicon
 
     def hovering_over_link(self, view, title, uri):
         self.status = uri or ""
@@ -113,6 +148,13 @@ class NotebookPage(gobject.GObject):
     def handle_title_changed(self, view, frame, title):
         self.title = title
         self.emit("title")
+
+    def handle_icon_loaded(self, view, uri, *a):
+        ## This may block, which is bad!
+
+        pixbuf = favcache.get(uri)
+        self.label.icon.set_from_pixbuf(pixbuf)
+        self.throbbing = False
 
     def populate_popup(self, view, menu):
         open_in_browser = gtk.MenuItem("Open in default browser")
@@ -165,6 +207,7 @@ class Session(gtk.Notebook):
         if num in self.tabs:
             p = self.tabs[num]
             self.send("title " + p.title)
+            self.send("location " + p.browser.get_main_frame().get_uri())
 
     def handle_status(self, tab):
         self.send("status " + tab.status)

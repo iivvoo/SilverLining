@@ -24,6 +24,9 @@ class SessionTab(gobject.GObject):
                   ()),
         "title":(gobject.SIGNAL_RUN_FIRST,
                   gobject.TYPE_NONE,
+                  ()),
+        "location":(gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
                   ())
         }
 
@@ -36,6 +39,7 @@ class SessionTab(gobject.GObject):
         self.source_id = None
         self.status = ""
         self.title = ""
+        self.location = url
 
         self.wid = -1
 
@@ -96,12 +100,10 @@ class SessionTab(gobject.GObject):
         elif cmd == "title":
             self.title = rest
             self.emit("title")
+        elif cmd == "location":
+            self.location = rest
+            self.emit("location")
 
-        ##
-        ## Types of commands:
-        ## CURRENT <url> - url for currently selected tab (to show in location)
-        ## STATUS <url> - url for currently selected item
-        ## TITLE <title> - title update for current tab
         print "CHILD wrote", data
         return True
 
@@ -149,6 +151,7 @@ class SilverLining(object):
         tab.connect("close", self.close)
         tab.connect("status", self.handle_session_status)
         tab.connect("title", self.handle_session_title)
+        tab.connect("location", self.handle_session_location)
 
         tab.show_all()
         tab.start(app[1], app[0])
@@ -162,6 +165,7 @@ class SilverLining(object):
             current = self.tabs[num]
             self.status.set_text(current.status)
             self.window.set_title("SilverLining: " + current.title)
+            self.location.set_text(current.location)
 
     def handle_back(self, widget):
         self.current().send("back")
@@ -200,6 +204,10 @@ class SilverLining(object):
     def handle_session_title(self, tab):
         if tab == self.current():
             self.window.set_title("SilverLining: " + tab.title)
+
+    def handle_session_location(self, tab):
+        if tab == self.current():
+            self.location.set_text(tab.location)
 
 if __name__ == '__main__':
     sl = SilverLining()

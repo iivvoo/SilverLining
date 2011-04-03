@@ -22,11 +22,10 @@ Why not ...
   the first again.
 
 TODO:
-- twitter view is too big -> too slow. Scroll window is max size!
-- throbber
 - better session definition, more sensible title in top-row tabs
+- twitter view is too big -> too slow. Scroll window is max size!
 - reorder tab-order
 - handle window close request (eg. popin gtalk chat)
 - definition of session profiles (?) / apps?
-- 
+- favicon should be timeout, async
 
