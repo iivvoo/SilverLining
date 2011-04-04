@@ -83,8 +83,13 @@ class SessionTab(gobject.GObject):
     def handle_child(self, source, condition):
         """ the child wrote something to stdout """
         #print "handle_child", source, condition
+        data = source.readline()
+        if not data:
+            self.emit(close)
+            return False
+
         try:
-            s = int(source.readline())
+            s = int(data)
         except ValueError, e:
             #print "Noise"
             return True

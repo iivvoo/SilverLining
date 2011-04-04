@@ -29,3 +29,4 @@ TODO:
 - handle window close request (eg. popin gtalk chat)
 - favicon should be timeout, async
 - enable/disable forward/back depending on can_*
+- if there are more tabs than can fit on the screen, some are hidden
