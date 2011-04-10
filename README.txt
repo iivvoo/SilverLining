@@ -30,3 +30,15 @@ TODO:
 - favicon should be timeout, async
 - enable/disable forward/back depending on can_*
 - if there are more tabs than can fit on the screen, some are hidden
+
+ISSUES:
+
+Strange crash:
+
+CHILD wrote status https://google.com/profiles
+./browser.py:216: Warning: g_object_get_qdata: assertion `G_IS_OBJECT (object)' failed
+  self.send("location " + p.browser.get_main_frame().get_uri())
+./browser.py:216: Warning: g_type_get_qdata: assertion `node != NULL' failed
+  self.send("location " + p.browser.get_main_frame().get_uri())
+CHILD wrote title Hacker News | Tell HN: .ly domains starting to have problems (letter.ly)
+

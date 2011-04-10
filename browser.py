@@ -179,9 +179,19 @@ class Session(gtk.Notebook):
         self.set_tab_pos(gtk.POS_TOP)
         self.show()
         self.tabs = {}
-        gobject.io_add_watch(sys.stdin, gobject.IO_IN, self.handle_stdin)
+        gobject.io_add_watch(sys.stdin, gobject.IO_IN|gobject.IO_ERR|gobject.IO_HUP, self.handle_stdin)
+        gobject.io_add_watch(sys.stdout, gobject.IO_ERR|gobject.IO_HUP, self.handle_io_err)
 
         self.connect("switch-page", self.handle_switch_page)
+
+        ## primitive logging, for now.
+        logfiles = os.listdir("/tmp/sllog")
+        if logfiles:
+            name = str(max([int(i) for i in logfiles]) + 1)
+        else:
+            name = "1"
+        self._log = open("/tmp/sllog/" + name, "w")
+
 
     def add_tab(self, url, title):
         p = NotebookPage(url, title)
@@ -222,8 +232,19 @@ class Session(gtk.Notebook):
         if tab == self.current():
             self.send("title " + tab.title)
 
+    def handle_io_err(self, source, condition):
+        self.log("Error on %r: %d\n" % (source, condition))
+        gtk.main_quit()
+        return False
+
     def handle_stdin(self, source, condition):
-        size = int(source.readline())
+        sizedata = source.readline()
+        if not sizedata:
+            self.log("Could not read from stdin\n")
+            gtk.main_quit()
+            return False
+
+        size = int(sizedata)
         data = source.read(size)
 
         if ' ' in data:
@@ -247,8 +268,16 @@ class Session(gtk.Notebook):
         return True
 
     def send(self, msg):
-        sys.stdout.write("%s\n%s" % (len(msg), msg))
-        sys.stdout.flush()
+        try:
+            sys.stdout.write("%s\n%s" % (len(msg), msg))
+            sys.stdout.flush()
+        except IOError, e:
+            self.log("IO Error out stdout: " + str(e) + "\n")
+            sys.exit(0)
+
+    def log(self, msg):
+        self._log.write(msg + "\n")
+        self._log.flush()
 
 if __name__ == '__main__':
     gobject.threads_init()

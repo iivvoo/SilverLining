@@ -33,6 +33,8 @@ class SessionTab(gobject.GObject):
     def __init__(self, url, title="new"):
         super(SessionTab, self).__init__()
         self.socket = gtk.Socket()
+        self.socket.connect("plug-removed", self.close)
+
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
         self.proc = None
@@ -85,6 +87,7 @@ class SessionTab(gobject.GObject):
         #print "handle_child", source, condition
         data = source.readline()
         if not data:
+            print "No data from", self, "closing..."
             self.emit(close)
             return False
 
