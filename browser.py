@@ -84,8 +84,19 @@ class NotebookPage(gobject.GObject):
         self.title = ""
         self.hover = None
 
+    @property
+    def child(self):
+        return self.win
+
+    @property
+    def current_url(self):
+        return self.browser.get_main_frame().get_uri() or ""
+
     def add_to_notebook(self, notebook):
-        return notebook.append_page(self.win, self.label)
+        page = notebook.append_page(self.win, self.label)
+        notebook.set_tab_reorderable(self.win, True)
+        notebook.set_tab_detachable(self.win, True)
+        return page
 
     def close(self, widget):
         self.emit("close")
@@ -177,6 +188,7 @@ class Session(gtk.Notebook):
     def __init__(self):
         super(Session, self).__init__()
         self.set_tab_pos(gtk.POS_TOP)
+        self.set_scrollable(True)
         self.show()
         self.tabs = {}
         gobject.io_add_watch(sys.stdin, gobject.IO_IN|gobject.IO_ERR|gobject.IO_HUP, self.handle_stdin)
@@ -195,8 +207,10 @@ class Session(gtk.Notebook):
 
     def add_tab(self, url, title):
         p = NotebookPage(url, title)
+        ## order is important, add_to_notebook triggers tabswitch which
+        ## depends on key being present in self.tabs
+        self.tabs[p.child] = p
         index = p.add_to_notebook(self)
-        self.tabs[index] = p
 
         p.show()
         p.connect("close", self.close_tab)
@@ -207,7 +221,11 @@ class Session(gtk.Notebook):
         return p.browser
 
     def current(self):
-        return self.tabs[self.get_current_page()]
+        return self.tabs[self.get_nth_page(self.get_current_page())]
+
+    def update_status(self, tab):
+        self.send("title " + tab.title)
+        self.send("location " + tab.current_url)
 
     def new_window(self, webview, webframe):
         return self.add_tab("", "new")
@@ -216,14 +234,13 @@ class Session(gtk.Notebook):
         num = self.page_num(tab.win)
         self.remove_page(num)
         tab.destroy()
-
+        self.update_status(self.current())
         ## if all tabs are closed, report cleanup to parent process
 
     def handle_switch_page(self, widget, page, num):
-        if num in self.tabs:
-            p = self.tabs[num]
-            self.send("title " + p.title)
-            self.send("location " + p.browser.get_main_frame().get_uri())
+        child = self.get_nth_page(num)
+        p = self.tabs[child]
+        self.update_status(p)
 
     def handle_status(self, tab):
         self.send("status " + tab.status)

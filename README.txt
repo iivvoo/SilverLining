@@ -24,12 +24,10 @@ Why not ...
 TODO:
 - better session definition, more sensible title in top-row tabs
   - definition of session profiles (?) / apps?
-- twitter view is too big -> too slow. Scroll window is max size!
-- reorder tab-order
+- twitter view is too big / too slow, research
 - handle window close request (eg. popin gtalk chat)
 - favicon should be timeout, async
 - enable/disable forward/back depending on can_*
-- if there are more tabs than can fit on the screen, some are hidden
 
 ISSUES:
 

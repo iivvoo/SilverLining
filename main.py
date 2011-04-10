@@ -44,6 +44,11 @@ class SessionTab(gobject.GObject):
         self.location = url
 
         self.wid = -1
+        self.close_emitted = False
+
+    @property
+    def child(self):
+        return self.socket
 
     def show(self):
         self.socket.show()
@@ -60,7 +65,10 @@ class SessionTab(gobject.GObject):
         self.label.destroy()
 
     def add_to_notebook(self, notebook):
-        return notebook.append_page(self.socket, self.label)
+        notebook.append_page(self.socket, self.label)
+        notebook.set_tab_reorderable(self.socket, True)
+        notebook.set_tab_detachable(self.socket, True)
+        return self.socket
 
     def start(self, url, title):
         basedir = os.path.dirname(__file__)
@@ -74,13 +82,22 @@ class SessionTab(gobject.GObject):
         ## fl = fcntl.fcntl(self.proc.stdout, fcntl.F_GETFL)
         ## fcntl.fcntl(self.proc.stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
         self.source_id = gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.handle_child)
+        gobject.io_add_watch(self.proc.stdout, gobject.IO_HUP|gobject.IO_ERR, self.handle_child_closed)
+        gobject.io_add_watch(self.proc.stdin, gobject.IO_HUP|gobject.IO_ERR, self.handle_child_closed)
 
-    def close(self, label):
-        self.emit("close")
+    def close(self, *args):
+        if not self.close_emitted:
+            self.close_emitted = True
+            self.emit("close")
 
     def send(self, cmd):
         self.proc.stdin.write("%s\n%s" % (len(cmd), cmd))
         self.proc.stdin.flush()
+
+    def handle_child_closed(self, source, condition):
+        print "Error on", self, "closing..."
+        self.close()
+        return False
 
     def handle_child(self, source, condition):
         """ the child wrote something to stdout """
@@ -88,7 +105,7 @@ class SessionTab(gobject.GObject):
         data = source.readline()
         if not data:
             print "No data from", self, "closing..."
-            self.emit(close)
+            self.close()
             return False
 
         try:
@@ -153,8 +170,10 @@ class SilverLining(object):
 
     def add_tab(self, app):
         tab = SessionTab(app[1], app[0])
-        index = tab.add_to_notebook(self.notebook)
-        self.tabs[index] = tab
+        ## this will invoke a page switch event, which depends on self.tabs,
+        ## so order is important
+        self.tabs[tab.child] = tab
+        tab.add_to_notebook(self.notebook)
 
         tab.connect("close", self.close)
         tab.connect("status", self.handle_session_status)
@@ -165,15 +184,18 @@ class SilverLining(object):
         tab.start(app[1], app[0])
 
     def current(self):
-        return self.tabs[self.notebook.get_current_page()]
+        return self.tabs[self.notebook.get_nth_page(self.notebook.get_current_page())]
+
+    def update_status(self, tab):
+        """ find the active tab and update the UI status widgets """
+        self.status.set_text(tab.status)
+        self.window.set_title("SilverLining: " + tab.title)
+        self.location.set_text(tab.location)
 
     ## local handlers
     def handle_switch_page(self, widget, page, num):
-        if num in self.tabs:
-            current = self.tabs[num]
-            self.status.set_text(current.status)
-            self.window.set_title("SilverLining: " + current.title)
-            self.location.set_text(current.location)
+        child = self.notebook.get_nth_page(num)
+        self.update_status(self.tabs[child])
 
     def handle_back(self, widget):
         self.current().send("back")
@@ -203,6 +225,8 @@ class SilverLining(object):
         num = self.notebook.page_num(tab.socket)
         self.notebook.remove_page(num)
         tab.destroy()
+        self.update_status(self.current())
+        print "COSE", tab, self.current()
 
     ## session handlers
     def handle_session_status(self, tab):
