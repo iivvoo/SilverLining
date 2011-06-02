@@ -3,13 +3,11 @@ import sys
 import time
 
 import gobject
-import pygtk  
 import gtk  
 import gtk.glade  
 
 import subprocess
 
-from browser import Browser
 from tablabel import TabLabel
 
 class SessionTab(gobject.GObject):
@@ -68,7 +66,7 @@ class SessionTab(gobject.GObject):
         notebook.append_page(self.socket, self.label)
         notebook.set_tab_reorderable(self.socket, True)
         notebook.set_tab_detachable(self.socket, True)
-        return self.socket
+        return notebook.page_num(self.socket)
 
     def start(self, url, title):
         basedir = os.path.dirname(__file__)
@@ -173,7 +171,7 @@ class SilverLining(object):
         ## this will invoke a page switch event, which depends on self.tabs,
         ## so order is important
         self.tabs[tab.child] = tab
-        tab.add_to_notebook(self.notebook)
+        index = tab.add_to_notebook(self.notebook)
 
         tab.connect("close", self.close)
         tab.connect("status", self.handle_session_status)
@@ -182,6 +180,7 @@ class SilverLining(object):
 
         tab.show_all()
         tab.start(app[1], app[0])
+        self.notebook.set_current_page(index)
 
     def current(self):
         return self.tabs[self.notebook.get_nth_page(self.notebook.get_current_page())]

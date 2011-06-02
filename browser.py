@@ -222,6 +222,7 @@ class Session(gtk.Notebook):
         p.connect("title", self.handle_title)
         p.grab_focus()
         p.browser.connect("create-web-view", self.new_window)
+        self.set_current_page(index)
         return p.browser
 
     def current(self):

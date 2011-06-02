@@ -28,6 +28,7 @@ TODO:
 - handle window close request (eg. popin gtalk chat)
 - favicon should be timeout, async
 - enable/disable forward/back depending on can_*
+- scale icon approriately
 
 ISSUES:
 
