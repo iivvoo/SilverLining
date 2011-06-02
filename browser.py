@@ -9,6 +9,8 @@ import urllib2
 
 import webbrowser
 
+from inspector import Inspector
+
 from tablabel import TabLabel
 
 VERSION = "0.1"
@@ -40,8 +42,22 @@ favcache = FavCache()
 
 class Browser(webkit.WebView):
     # http://webkitgtk.org/reference/webkitgtk-webkitwebview.html
-    def __init__(self):
+    def __init__(self, enable_inspector):
         super(Browser, self).__init__()
+        if enable_inspector:
+            settings = self.get_settings()
+            settings.set_property("enable-developer-extras", True)
+            self.inspector = self.get_web_inspector()
+            self.inspector.connect("inspect-web-view", self.inspect)
+
+    def inspect(self, inspector, view):
+        i = Inspector(inspector, view)
+        i.show()
+        i.connect("close", self.handle_close_inspector)
+        return i.webview
+
+    def handle_close_inspector(self):
+        pass
 
 class NotebookPage(gobject.GObject):
     __gsignals__ = {
@@ -64,7 +80,7 @@ class NotebookPage(gobject.GObject):
 
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
-        self.browser = Browser()
+        self.browser = Browser(enable_inspector=True)
         self.browser.connect("load-started", self.load_started)
         self.browser.connect("load-finished", self.load_finished)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
