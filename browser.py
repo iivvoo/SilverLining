@@ -197,7 +197,11 @@ class Session(gtk.Notebook):
         self.connect("switch-page", self.handle_switch_page)
 
         ## primitive logging, for now.
+        if not os.path.exists("/tmp/sllog"):
+            os.mkdir("/tmp/sllog")
+
         logfiles = os.listdir("/tmp/sllog")
+
         if logfiles:
             name = str(max([int(i) for i in logfiles]) + 1)
         else:
