@@ -131,7 +131,8 @@ class SessionTab(gobject.GObject):
         return True
 
 class SilverLining(object):
-    apps = (("gmail", "http://mail.google.com"),
+    apps = (("new..", ("about:blank")),
+            ("gmail", "http://mail.google.com"),
             ("google docs", "http://docs.google.com"),
             ("twitter", "http://www.twitter.com"),
             ("android market", "http://market.android.com/publish"))
@@ -181,6 +182,7 @@ class SilverLining(object):
         tab.show_all()
         tab.start(app[1], app[0])
         self.notebook.set_current_page(index)
+        self.update_status(tab)
 
     def current(self):
         return self.tabs[self.notebook.get_nth_page(self.notebook.get_current_page())]
@@ -242,8 +244,6 @@ class SilverLining(object):
 
 if __name__ == '__main__':
     sl = SilverLining()
-    sl.add_tab(sl.apps[0])
-    sl.add_tab(sl.apps[2])
-    sl.add_tab(sl.apps[3])
+    sl.add_tab(("New..", "about:blank"))
     gtk.main()
     
