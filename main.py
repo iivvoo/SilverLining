@@ -225,9 +225,9 @@ class SilverLining(object):
     def close(self, tab):
         num = self.notebook.page_num(tab.socket)
         self.notebook.remove_page(num)
+        print "COSE", tab, self.current()
         tab.destroy()
         self.update_status(self.current())
-        print "COSE", tab, self.current()
 
     ## session handlers
     def handle_session_status(self, tab):
