@@ -41,3 +41,4 @@ CHILD wrote status https://google.com/profiles
   self.send("location " + p.browser.get_main_frame().get_uri())
 CHILD wrote title Hacker News | Tell HN: .ly domains starting to have problems (letter.ly)
 
+large favicon for mydock - force size/scale

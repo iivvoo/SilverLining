@@ -191,6 +191,7 @@ class SilverLining(object):
         self.status.set_text(tab.status)
         self.window.set_title("SilverLining: " + tab.title)
         self.location.set_text(tab.location)
+        print "Setting location to", tab.location
 
     ## local handlers
     def handle_switch_page(self, widget, page, num):

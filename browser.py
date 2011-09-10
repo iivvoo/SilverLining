@@ -69,6 +69,12 @@ class NotebookPage(gobject.GObject):
                   ()),
         "title": (gobject.SIGNAL_RUN_FIRST,
                   gobject.TYPE_NONE,
+                  ()),
+        "url": (gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
+                  ()),
+        "debug": (gobject.SIGNAL_RUN_FIRST,
+                  gobject.TYPE_NONE,
                   ())
         }
 
@@ -81,8 +87,7 @@ class NotebookPage(gobject.GObject):
         self.label = TabLabel(title)
         self.label.connect("close", self.close)
         self.browser = Browser(enable_inspector=True)
-        self.browser.connect("load-started", self.load_started)
-        self.browser.connect("load-finished", self.load_finished)
+        self.browser.connect("notify::load-status", self.load_status)
         self.browser.connect("hovering-over-link", self.hovering_over_link)
         self.browser.connect("title-changed", self.handle_title_changed)
         self.browser.connect("icon-loaded", self.handle_icon_loaded)
@@ -99,6 +104,7 @@ class NotebookPage(gobject.GObject):
         self.status = ""
         self.title = ""
         self.hover = None
+        self.debug = ""
 
     @property
     def child(self):
@@ -107,6 +113,10 @@ class NotebookPage(gobject.GObject):
     @property
     def current_url(self):
         return self.browser.get_main_frame().get_uri() or ""
+
+    @property
+    def current_title(self):
+        return self.browser.get_main_frame().get_title() or self.current_url
 
     def add_to_notebook(self, notebook):
         page = notebook.append_page(self.win, self.label)
@@ -154,18 +164,25 @@ class NotebookPage(gobject.GObject):
 
     ## handlers
 
-    def load_started(self, widget, frame, *a, **b):
-        self.show_throbber()
-
-    def load_finished(self, widget, frame, *a, **b):
-        self.title = frame.get_title() or frame.get_uri() or ""
-        self.label.text = self.title 
-        self.emit("title")
-        if self.throbbing:
-            self.throbbing = False
-            self.label.icon.set_from_stock(gtk.STOCK_ORIENTATION_PORTRAIT, gtk.ICON_SIZE_MENU)
-            ## handle_icon_loaded may follow, setting the actual favicon
-        ## widget.execute_script("alert('Hello')")
+    def load_status(self, widget, *a, **b):
+        status = self.browser.get_load_status()
+        if status == webkit.LOAD_COMMITTED:
+            self.show_throbber()
+            self.emit("url")
+        if status == webkit.LOAD_FINISHED:
+            self.title = self.current_title
+            self.label.text = self.title 
+            self.emit("title")
+            if self.throbbing:
+                self.throbbing = False
+                self.label.icon.set_from_stock(gtk.STOCK_ORIENTATION_PORTRAIT, gtk.ICON_SIZE_MENU)
+                ## handle_icon_loaded may follow, setting the actual favicon
+            ## widget.execute_script("alert('Hello')")
+        #if self.browser.get_load_status() == webkit.LOAD_COMMITTED:
+        #    self.debug = "ok"
+        #else:
+        #    self.debug = "%s %s %s" % (self.browser.get_load_status(), a, b)
+        #self.emit("debug")
 
     def hovering_over_link(self, view, title, uri):
         self.status = uri or ""
@@ -236,6 +253,8 @@ class Session(gtk.Notebook):
         p.connect("close", self.close_tab)
         p.connect("status", self.handle_status)
         p.connect("title", self.handle_title)
+        p.connect("url", self.handle_url)
+        p.connect("debug", self.handle_debug)
         p.grab_focus()
         p.browser.connect("create-web-view", self.new_window)
         self.set_current_page(index)
@@ -269,6 +288,14 @@ class Session(gtk.Notebook):
     def handle_title(self, tab):
         if tab == self.current():
             self.send("title " + tab.title)
+
+    def handle_url(self, tab):
+        if tab == self.current():
+            self.send("location " + tab.current_url)
+
+    def handle_debug(self, tab):
+        if tab == self.current():
+            self.send("debug " + tab.debug)
 
     def handle_io_err(self, source, condition):
         self.log("Error on %r: %d\n" % (source, condition))
