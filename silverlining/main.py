@@ -167,6 +167,9 @@ class SilverLining(object):
         self.window.show_all()
         self.tabs = {}
 
+        self.startup = self.tree.get_object("startup")
+        self.startup.show_all()
+
     def add_tab(self, app):
         tab = SessionTab(app[1], app[0])
         ## this will invoke a page switch event, which depends on self.tabs,
