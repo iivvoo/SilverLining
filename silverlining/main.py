@@ -169,6 +169,26 @@ class SilverLining(object):
 
         self.startup = self.tree.get_object("startup")
         self.startup.show_all()
+        self.username = self.tree.get_object("username")
+        self.password = self.tree.get_object("password")
+        self.passphrase = self.tree.get_object("passphrase")
+
+        self.tree.get_object("ok").connect("clicked", self.handle_config)
+        self.tree.get_object("skip").connect("clicked", self.skip_config)
+
+    def handle_config(self, widget):
+        username = self.username.get_text().strip()
+        password = self.password.get_text().strip()
+        passphrase = self.passphrase.get_text().strip()
+        self.startup.destroy()
+        print username, password, passphrase
+        ## initialize sync lib, fetch passwords
+        from silversync.client import Sync
+        self.sync = Sync(username, password, passphrase)
+        self.passwords = self.sync.passwords()
+
+    def skip_config(self, widget):
+        self.startup.destroy()
 
     def add_tab(self, app):
         tab = SessionTab(app[1], app[0])
@@ -229,7 +249,6 @@ class SilverLining(object):
     def close(self, tab):
         num = self.notebook.page_num(tab.socket)
         self.notebook.remove_page(num)
-        print "COSE", tab, self.current()
         tab.destroy()
         self.update_status(self.current())
 
