@@ -138,7 +138,8 @@ class SilverLining(object):
     
     def __init__(self):
         self.tree = gtk.Builder()
-        self.tree.add_from_file("silverlining.glade")
+        gladefile = os.path.join(os.path.dirname(__file__), 'silverlining.glade')
+        self.tree.add_from_file(gladefile)
         self.window = self.tree.get_object("window")
         self.notebook = self.tree.get_object("notebook1")
         self.menu = self.tree.get_object("appmenu")
@@ -242,8 +243,10 @@ class SilverLining(object):
         if tab == self.current():
             self.location.set_text(tab.location)
 
-if __name__ == '__main__':
+def main():
     sl = SilverLining()
     sl.add_tab(("New..", "about:blank"))
     gtk.main()
-    
+
+if __name__ == '__main__':
+    main()    

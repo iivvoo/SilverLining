@@ -7,7 +7,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk,sys
 
-if __name__ == '__main__':
+def main():
     if len(sys.argv) == 2:
         url = sys.argv[1]
     else:
@@ -23,3 +23,6 @@ if __name__ == '__main__':
     s.show()
     
     gtk.main()
+
+if __name__ == '__main__':
+    main()

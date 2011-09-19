@@ -218,6 +218,8 @@ class NotebookPage(gobject.GObject):
             webbrowser.open(self.hover)
 
 class Session(gtk.Notebook):
+    page_type = NotebookPage
+
     def __init__(self):
         super(Session, self).__init__()
         self.set_tab_pos(gtk.POS_TOP)
@@ -243,7 +245,7 @@ class Session(gtk.Notebook):
 
 
     def add_tab(self, url, title):
-        p = NotebookPage(url, title)
+        p = self.page_type(url, title)
         ## order is important, add_to_notebook triggers tabswitch which
         ## depends on key being present in self.tabs
         self.tabs[p.child] = p
