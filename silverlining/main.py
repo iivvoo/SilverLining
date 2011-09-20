@@ -235,7 +235,7 @@ class SilverLining(object):
         url = self.location.get_text().strip()
         if not url:
             return
-        if not url.startswith("http:"):
+        if not (url.startswith("http:") or url.startswith("https:")):
             url = "http://" + url
         self.location.set_text(url)
         self.current().send("open " + url)
