@@ -8,6 +8,8 @@ import gtk.glade
 import subprocess
 
 from tablabel import TabLabel
+from silverlining.ui import loader
+from silverlining.sync import Sync
 
 class SessionTab(gobject.GObject):
     PROCNAME = "browser.py"
@@ -137,23 +139,20 @@ class SilverLining(object):
             ("android market", "http://market.android.com/publish"))
     
     def __init__(self):
-        self.tree = gtk.Builder()
-        gladefile = os.path.join(os.path.dirname(__file__), 'silverlining.glade')
-        self.tree.add_from_file(gladefile)
-        self.window = self.tree.get_object("window")
-        self.notebook = self.tree.get_object("notebook1")
-        self.menu = self.tree.get_object("appmenu")
+        self.window = loader("window")
+        self.notebook = loader("notebook1")
+        self.menu = loader("appmenu")
         for a in self.apps:
             item = gtk.MenuItem(a[0])
             self.menu.append(item)
             item.connect("activate", self.app_selected, a)
 
-        self.back = self.tree.get_object("back")
-        self.forward = self.tree.get_object("forward")
-        self.reload = self.tree.get_object("reload")
-        self.new = self.tree.get_object("new")
-        self.location = self.tree.get_object("location")
-        self.status = self.tree.get_object("status")
+        self.back = loader("back")
+        self.forward = loader("forward")
+        self.reload = loader("reload")
+        self.new = loader("new")
+        self.location = loader("location")
+        self.status = loader("status")
 
         self.back.connect("clicked", self.handle_back)
         self.forward.connect("clicked", self.handle_forward)
@@ -167,28 +166,12 @@ class SilverLining(object):
         self.window.show_all()
         self.tabs = {}
 
-        self.startup = self.tree.get_object("startup")
-        self.startup.show_all()
-        self.username = self.tree.get_object("username")
-        self.password = self.tree.get_object("password")
-        self.passphrase = self.tree.get_object("passphrase")
+        self.startup = Sync()
+        self.startup.show()
+        self.startup.connect("accepted", self.handle_startup)
 
-        self.tree.get_object("ok").connect("clicked", self.handle_config)
-        self.tree.get_object("skip").connect("clicked", self.skip_config)
-
-    def handle_config(self, widget):
-        username = self.username.get_text().strip()
-        password = self.password.get_text().strip()
-        passphrase = self.passphrase.get_text().strip()
-        self.startup.destroy()
-        print username, password, passphrase
-        ## initialize sync lib, fetch passwords
-        from silversync.client import Sync
-        self.sync = Sync(username, password, passphrase)
-        self.passwords = self.sync.passwords()
-
-    def skip_config(self, widget):
-        self.startup.destroy()
+    def handle_startup(self, sync):
+        print self.startup.username, self.startup.password, self.startup.passphrase
 
     def add_tab(self, app):
         tab = SessionTab(app[1], app[0])

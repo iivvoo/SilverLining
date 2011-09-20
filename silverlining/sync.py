@@ -1,7 +1,7 @@
 import gobject
 
 from silverlining.ui import loader
-from silversync.client import Sync as SyncLib
+from silversync.client import Sync as SyncLib, Unauthorized
 
 class Sync(gobject.GObject):
     """
@@ -42,6 +42,7 @@ class Sync(gobject.GObject):
         ## initialize sync lib, fetch passwords
         self.sync = SyncLib(username, password, passphrase)
         self.passwords = self.sync.passwords()
+        ## handle errors
         self.emit("accepted") ## only on success
 
     def skip_config(self, widget):
